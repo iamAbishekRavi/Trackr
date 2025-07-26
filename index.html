@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aadat</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Track your daily habits, build streaks, and stay accountable with punishments for missed habits">
+    <meta name="theme-color" content="#3b82f6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Habit Tracker">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><gittext y='.9em' font-size='90'>🎯</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 1rem;
+            transition: all 0.3s ease;
+            overflow-x: hidden;
+        }
+        
+        .app {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.4), 
+                        0 0 0 1px rgba(255, 255, 255, 0.05),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            min-height: calc(100vh - 2rem);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, #3b82f6, #8b5cf6, #06b6d4);
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            background: rgba(30, 41, 59, 0.6);
+            padding: 0.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            flex: 1;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .nav-tab.active {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+        }
+        
+        .nav-tab:hover:not(.active) {
+            background: rgba(30, 41, 59, 0.8);
+            color: #e2e8f0;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .add-habit {
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .input {
+            flex: 1;
+            padding: 0.875rem 1.25rem;
+            border: none;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.8);
+            color: #e2e8f0;
+            font-size: 1rem;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .input:focus {
+            outline: none;
+            background: rgba(15, 23, 42, 0.95);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1),
+                        inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .input::placeholder {
+            color: #64748b;
+        }
+        
+        .btn {
+            padding: 0.875rem 1.75rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25),
+                        0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35),
+                        0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .habits-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        
+        .habit-card {
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 18px;
+            padding: 1.75rem;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .habit-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2),
+                        0 8px 16px rgba(59, 130, 246, 0.1);
+            border-color: rgba(148, 163, 184, 0.2);
+        }
+        
+        .habit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .habit-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #f8fafc;
+        }
+        
+        .habit-streak {
+            background: linear-gradient(135deg, #059669, #10b981);
+            padding: 0.375rem 0.875rem;
+            border-radius: 24px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .habit-checkboxes {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .day-checkbox {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .day-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        
+        .day-label.today {
+            color: #3b82f6;
+            font-weight: 700;
+        }
+        
+        .checkbox-container {
+            position: relative;
+            width: 40px;
+            height: 40px;
+        }
+        
+        .checkbox {
+            width: 100%;
+            height: 100%;
+            appearance: none;
+            border: 2px solid rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.6);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        
+        .checkbox.today {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        .checkbox:checked {
+            background: linear-gradient(135deg, #059669, #10b981);
+            border-color: #10b981;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        
+        .checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .checkbox:hover:not(:checked) {
+            border-color: rgba(148, 163, 184, 0.5);
+            background: rgba(30, 41, 59, 0.8);
+        }
+        
+        .habit-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+        
+        .btn-small {
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+            border-radius: 10px;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+        }
+        
+        .btn-danger:hover {
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35);
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .dashboard-card {
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 18px;
+            padding: 1.5rem;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+        
+        .dashboard-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+        
+        .progress-ring {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 1rem;
+            position: relative;
+        }
+        
+        .progress-ring svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring circle {
+            fill: none;
+            stroke-width: 8;
+        }
+        
+        .progress-ring .bg {
+            stroke: rgba(148, 163, 184, 0.2);
+        }
+        
+        .progress-ring .progress {
+            stroke: url(#gradient);
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.6s ease;
+        }
+        
+        .punishment-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .punishment-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .punishment-content {
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .punishment-modal.show .punishment-content {
+            transform: scale(1);
+        }
+        
+        .punishment-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        .punishment-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 1rem;
+        }
+        
+        .punishment-text {
+            font-size: 1rem;
+            color: #e2e8f0;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        
+        .habit-list {
+            list-style: none;
+            margin-bottom: 1rem;
+        }
+        
+        .habit-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        .btn-mini {
+            transition: all 0.2s ease;
+        }
+        
+        .btn-mini:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-mini:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 1rem;
+            color: #64748b;
+        }
+        
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.7;
+        }
+        
+        .install-prompt {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .install-prompt.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .install-prompt:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(59, 130, 246, 0.4);
+        }
+        
+        .toast {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: rgba(15, 23, 42, 0.95);
+            color: #e2e8f0;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            max-width: 300px;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .toast.success {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .toast.error {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .app {
+                padding: 1rem;
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+            
+            .habit-checkboxes {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 0.5rem;
+            }
+            
+            .checkbox-container {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .habit-header {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-start;
+            }
+            
+            .punishment-content {
+                padding: 1.5rem;
+            }
+            
+            .install-prompt {
+                bottom: 0.5rem;
+                right: 0.5rem;
+                left: 0.5rem;
+                text-align: center;
+            }
+            
+            .toast {
+                top: 1rem;
+                right: 1rem;
+                left: 1rem;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    <button id="installPrompt" class="install-prompt">
+        📱 Install App
+    </button>
+    
+    <script>
+        // PWA Manifest as data URL
+        const manifest = {
+            "name": "Habit Tracker PWA",
+            "short_name": "Habits",
+            "description": "Track your daily habits, build streaks, and stay accountable",
+            "start_url": "./",
+            "display": "standalone",
+            "theme_color": "#3b82f6",
+            "background_color": "#0f0f23",
+            "orientation": "portrait",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%233b82f6' rx='20'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white'>🎯</text></svg>",
+                    "sizes": "192x192",
+                    "type": "image/svg+xml",
+                    "purpose": "any maskable"
+                },
+                {
+                    "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%233b82f6' rx='20'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white'>🎯</text></svg>",
+                    "sizes": "512x512",
+                    "type": "image/svg+xml"
+                }
+            ]
+        };
+
+        // Create manifest blob URL
+        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        
+        // Add manifest link
+        const link = document.createElement('link');
+        link.rel = 'manifest';
+        link.href = manifestURL;
+        document.head.appendChild(link);
+
+        // Service Worker
+        const serviceWorkerCode = `
+            const CACHE_NAME = 'habit-tracker-v1.1';
+            const urlsToCache = [
+                './',
+                'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%233b82f6" rx="20"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">🎯</text></svg>'
+            ];
+
+            self.addEventListener('install', function(event) {
+                event.waitUntil(
+                    caches.open(CACHE_NAME)
+                        .then(function(cache) {
+                            return cache.addAll(urlsToCache);
+                        })
+                );
+                self.skipWaiting();
+            });
+
+            self.addEventListener('fetch', function(event) {
+                event.respondWith(
+                    caches.match(event.request)
+                        .then(function(response) {
+                            if (response) {
+                                return response;
+                            }
+                            return fetch(event.request);
+                        }
+                    )
+                );
+            });
+
+            self.addEventListener('activate', function(event) {
+                event.waitUntil(
+                    caches.keys().then(function(cacheNames) {
+                        return Promise.all(
+                            cacheNames.map(function(cacheName) {
+                                if (cacheName !== CACHE_NAME) {
+                                    return caches.delete(cacheName);
+                                }
+                            })
+                        );
+                    })
+                );
+            });
+        `;
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            const swBlob = new Blob([serviceWorkerCode], {type: 'application/javascript'});
+            const swURL = URL.createObjectURL(swBlob);
+            
+            navigator.serviceWorker.register(swURL)
+                .then(function(registration) {
+                    console.log('Service Worker registered successfully:', registration.scope);
+                })
+                .catch(function(error) {
+                    console.log('Service Worker registration failed:', error);
+                });
+        }
+
+        // Punishment activities list
+        const PUNISHMENTS = [
+            "Do 20 push-ups right now! 💪",
+            "Write down 5 things you're grateful for 📝",
+            "Call a friend or family member you haven't spoken to in a while 📞",
+            "Do a 10-minute meditation session 🧘‍♀️",
+            "Clean and organize your workspace 🧹",
+            "Do 30 jumping jacks ⚡",
+            "Write a short poem about your goals 📝",
+            "Do a 5-minute plank challenge 🏋️‍♀️",
+            "Listen to an educational podcast for 15 minutes 🎧",
+            "Do 50 squats (break them into sets if needed) 🏃‍♂️",
+            "Write a thank you note to someone who helped you recently 💌",
+            "Do a 15-minute walk outside 🚶‍♀️",
+            "Organize your phone photos and delete unnecessary ones 📱",
+            "Do breathing exercises for 10 minutes 🌬️",
+            "Read 10 pages of a self-improvement book 📚",
+            "Do wall sits for 2 minutes 🏋️‍♂️",
+            "Practice a new skill for 20 minutes 🎯",
+            "Do yoga stretches for 15 minutes 🧘‍♂️",
+            "Write down your goals for tomorrow 📋",
+            "Do burpees for 5 minutes ⚡"
+        ];
+
+        // Utility functions
+        const Utils = {
+            // Improved date handling with timezone consistency
+            getDateString(date = new Date()) {
+                return date.toLocaleDateString('en-CA'); // YYYY-MM-DD format
+            },
+            
+            // Toast notification system
+            showToast(message, type = 'success', duration = 3000) {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => toast.classList.add('show'), 100);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => document.body.removeChild(toast), 300);
+                }, duration);
+            },
+            
+            // Debounce function for performance
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            },
+            
+            // Safe storage operations
+            safeStorage: {
+                get(key, defaultValue = null) {
+                    try {
+                        const value = localStorage.getItem(key);
+                        return value ? JSON.parse(value) : defaultValue;
+                    } catch (e) {
+                        console.warn(`Could not read ${key} from localStorage`, e);
+                        return defaultValue;
+                    }
+                },
+                
+                set(key, value) {
+                    try {
+                        localStorage.setItem(key, JSON.stringify(value));
+                        return true;
+                    } catch (e) {
+                        console.warn(`Could not save ${key} to localStorage`, e);
+                        return false;
+                    }
+                }
+            }
+        };
+
+        class HabitTracker {
+            constructor() {
+                this.habits = this.loadHabits();
+                this.currentTab = 'habits';
+                this.stats = this.calculateStats();
+                this.debouncedSave = Utils.debounce(this.saveHabits.bind(this), 300);
+                this.render();
+                this.checkForMissedHabits();
+            }
+
+            loadHabits() {
+                const habits = Utils.safeStorage.get('habits', []);
+                return habits.map(habit => ({
+                    ...habit,
+                    completions: habit.completions || {}
+                }));
+            }
+
+            saveHabits() {
+                const success = Utils.safeStorage.set('habits', this.habits);
+                if (!success) {
+                    Utils.showToast('Could not save habits. Please check your storage space.', 'error');
+                }
+            }
+
+            addHabit(name) {
+                const trimmedName = name.trim();
+                if (!trimmedName) {
+                    Utils.showToast('Please enter a habit name', 'error');
+                    return;
+                }
+
+                // Check for duplicate habits
+                if (this.habits.some(habit => habit.name.toLowerCase() === trimmedName.toLowerCase())) {
+                    Utils.showToast('This habit already exists!', 'error');
+                    return;
+                }
+                
+                const habit = {
+                    id: Date.now(),
+                    name: trimmedName,
+                    completions: {},
+                    createdAt: new Date().toISOString()
+                };
+                
+                this.habits.push(habit);
+                this.debouncedSave();
+                this.stats = this.calculateStats();
+                this.render();
+                Utils.showToast(`Added habit: ${trimmedName}`, 'success');
+            }
+
+            deleteHabit(id) {
+                const habitIndex = this.habits.findIndex(habit => habit.id === id);
+                if (habitIndex === -1) return;
+
+                const habitName = this.habits[habitIndex].name;
+                this.habits.splice(habitIndex, 1);
+                this.debouncedSave();
+                this.stats = this.calculateStats();
+                this.render();
+                Utils.showToast(`Deleted habit: ${habitName}`, 'success');
+            }
+
+            toggleHabit(habitId, date) {
+                const habit = this.habits.find(h => h.id === habitId);
+                if (!habit) return;
+
+                const wasCompleted = habit.completions[date];
+                if (wasCompleted) {
+                    delete habit.completions[date];
+                    Utils.showToast(`Unmarked: ${habit.name}`, 'success');
+                } else {
+                    habit.completions[date] = true;
+                    Utils.showToast(`✓ Completed: ${habit.name}`, 'success');
+                }
+
+                this.debouncedSave();
+                this.stats = this.calculateStats();
+                this.render();
+            }
+
+            calculateStats() {
+                const weekDates = this.getWeekDates();
+                const monthDates = this.getMonthDates();
+                
+                let weeklyCompleted = 0;
+                let monthlyCompleted = 0;
+                let habitsWithStreaks = 0;
+                let totalStreakLength = 0;
+
+                this.habits.forEach(habit => {
+                    // Weekly stats
+                    weeklyCompleted += weekDates.filter(date => habit.completions[date]).length;
+                    
+                    // Monthly stats
+                    monthlyCompleted += monthDates.filter(date => habit.completions[date]).length;
+                    
+                    // Streak stats
+                    const streak = this.getStreak(habit);
+                    if (streak > 0) habitsWithStreaks++;
+                    totalStreakLength += streak;
+                });
+
+                const totalWeeklyPossible = this.habits.length * 7;
+                const totalMonthlyPossible = this.habits.length * monthDates.length;
+
+                return {
+                    weekly: {
+                        completed: weeklyCompleted,
+                        possible: totalWeeklyPossible,
+                        completionRate: totalWeeklyPossible > 0 ? Math.round((weeklyCompleted / totalWeeklyPossible) * 100) : 0,
+                        habitsWithStreaks,
+                        averageStreak: this.habits.length > 0 ? Math.round((totalStreakLength / this.habits.length) * 10) / 10 : 0
+                    },
+                    monthly: {
+                        completed: monthlyCompleted,
+                        possible: totalMonthlyPossible,
+                        completionRate: totalMonthlyPossible > 0 ? Math.round((monthlyCompleted / totalMonthlyPossible) * 100) : 0,
+                        daysInMonth: monthDates.length
+                    }
+                };
+            }
+
+            getWeekDates() {
+                const dates = [];
+                const today = new Date();
+                const startOfWeek = new Date(today);
+                startOfWeek.setDate(today.getDate() - today.getDay());
+
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(startOfWeek);
+                    date.setDate(startOfWeek.getDate() + i);
+                    dates.push(Utils.getDateString(date));
+                }
+                return dates;
+            }
+
+            getMonthDates() {
+                const dates = [];
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = today.getMonth();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(year, month, day);
+                    dates.push(Utils.getDateString(date));
+                }
+                return dates;
+            }
+
+            getDayName(dateStr) {
+                const date = new Date(dateStr + 'T00:00:00');
+                return date.toLocaleDateString('en-US', { weekday: 'short' });
+            }
+
+            isToday(dateStr) {
+                return dateStr === Utils.getDateString();
+            }
+
+            getStreak(habit) {
+                let streak = 0;
+                const today = new Date();
+                let currentDate = new Date(today);
+
+                while (true) {
+                    const dateStr = Utils.getDateString(currentDate);
+                    if (habit.completions[dateStr]) {
+                        streak++;
+                        currentDate.setDate(currentDate.getDate() - 1);
+                    } else {
+                        break;
+                    }
+                }
+
+                return streak;
+            }
+
+            checkForMissedHabits() {
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = Utils.getDateString(yesterday);
+
+                const missedHabits = this.habits.filter(habit => !habit.completions[yesterdayStr]);
+                
+                if (missedHabits.length > 0) {
+                    const lastPunishmentDate = Utils.safeStorage.get('lastPunishmentDate', '');
+                    if (lastPunishmentDate !== yesterdayStr) {
+                        setTimeout(() => this.showPunishmentModal(missedHabits), 1000);
+                    }
+                }
+            }
+
+            showPunishmentModal(missedHabits) {
+                const yesterday = new Date();
+                yesterday.setDate(yesterday.getDate() - 1);
+                const yesterdayStr = Utils.getDateString(yesterday);
+
+                const modal = document.createElement('div');
+                modal.className = 'punishment-modal';
+                modal.innerHTML = `
+                    <div class="punishment-content">
+                        <div class="punishment-icon">🤔</div>
+                        <h3 class="punishment-title">Hold on! Let's check about yesterday...</h3>
+                        <div class="punishment-text">
+                            <p>I noticed you didn't check off ${missedHabits.length} habit${missedHabits.length > 1 ? 's' : ''} yesterday:</p>
+                            <ul style="text-align: left; margin: 1rem 0; background: rgba(30, 41, 59, 0.4); padding: 1rem; border-radius: 10px;">
+                                ${missedHabits.map(habit => `
+                                    <li style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                                        <span>• ${habit.name}</span>
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            <button class="btn-mini forgot" onclick="app.markHabitAsForgotten(${habit.id}, '${yesterdayStr}', this)" 
+                                                    style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #10b981; border: none; border-radius: 6px; color: white; cursor: pointer;">
+                                                I did it! ✓
+                                            </button>
+                                            <button class="btn-mini missed" onclick="app.markHabitAsMissed(${habit.id}, this)"
+                                                    style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #ef4444; border: none; border-radius: 6px; color: white; cursor: pointer;">
+                                                I missed it ✗
+                                            </button>
+                                        </div>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                            <p style="color: #94a3b8; font-size: 0.9rem; font-style: italic;">
+                                Be honest! Did you forget to check the box, or did you actually miss doing the habit?
+                            </p>
+                        </div>
+                        <div id="punishment-section" style="display: none;">
+                            <hr style="margin: 1.5rem 0; border: none; height: 1px; background: rgba(148, 163, 184, 0.2);">
+                            <div class="punishment-icon" style="font-size: 3rem;">😤</div>
+                            <h4 style="color: #ef4444; margin-bottom: 1rem;">Punishment Time!</h4>
+                            <p>You actually missed <span id="actually-missed-count">0</span> habit(s). Here's your punishment activity:</p>
+                            <p id="punishment-activity" style="background: rgba(239, 68, 68, 0.1); padding: 1rem; border-radius: 10px; margin: 1rem 0; font-weight: 600;"></p>
+                            <button class="btn btn-small" onclick="this.closest('.punishment-modal').remove(); app.completePunishmentFlow('${yesterdayStr}')">
+                                I'll do it! 💪
+                            </button>
+                            <button class="btn btn-small btn-danger" style="margin-left: 0.5rem;" onclick="this.closest('.punishment-modal').remove(); app.completePunishmentFlow('${yesterdayStr}')">
+                                Skip (I'm weak 😔)
+                            </button>
+                        </div>
+                        <div id="completion-section">
+                            <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 1rem;">
+                                Click the buttons above for each habit, then I'll determine if you need a punishment! 😊
+                            </p>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+                setTimeout(() => modal.classList.add('show'), 100);
+                
+                this.currentPunishmentModal = {
+                    element: modal,
+                    totalHabits: missedHabits.length,
+                    processedHabits: 0,
+                    actuallyMissed: 0,
+                    yesterdayStr: yesterdayStr
+                };
+            }
+
+            markHabitAsForgotten(habitId, date, buttonElement) {
+                const habit = this.habits.find(h => h.id === habitId);
+                if (habit) {
+                    habit.completions[date] = true;
+                    this.debouncedSave();
+                }
+
+                buttonElement.style.background = '#6b7280';
+                buttonElement.textContent = 'Marked ✓';
+                buttonElement.disabled = true;
+                buttonElement.nextElementSibling.disabled = true;
+                buttonElement.nextElementSibling.style.background = '#6b7280';
+
+                this.processPunishmentChoice('forgot');
+            }
+
+            markHabitAsMissed(habitId, buttonElement) {
+                buttonElement.style.background = '#6b7280';
+                buttonElement.textContent = 'Noted ✗';
+                buttonElement.disabled = true;
+                buttonElement.previousElementSibling.disabled = true;
+                buttonElement.previousElementSibling.style.background = '#6b7280';
+
+                this.processPunishmentChoice('missed');
+            }
+
+            processPunishmentChoice(choice) {
+                if (!this.currentPunishmentModal) return;
+
+                this.currentPunishmentModal.processedHabits++;
+                if (choice === 'missed') {
+                    this.currentPunishmentModal.actuallyMissed++;
+                }
+
+                if (this.currentPunishmentModal.processedHabits === this.currentPunishmentModal.totalHabits) {
+                    this.finalizePunishmentModal();
+                }
+            }
+
+            finalizePunishmentModal() {
+                const modal = this.currentPunishmentModal;
+                const completionSection = modal.element.querySelector('#completion-section');
+                const punishmentSection = modal.element.querySelector('#punishment-section');
+
+                if (modal.actuallyMissed === 0) {
+                    completionSection.innerHTML = `
+                        <div style="text-align: center; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 10px; margin-top: 1rem;">
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎉</div>
+                            <h4 style="color: #10b981; margin-bottom: 0.5rem;">Great job!</h4>
+                            <p style="color: #10b981;">You actually completed all your habits! Just remember to check them off next time. 😊</p>
+                            <button class="btn btn-small" style="margin-top: 1rem; background: #10b981;" onclick="this.closest('.punishment-modal').remove(); app.completePunishmentFlow('${modal.yesterdayStr}')">
+                                Awesome! I'll remember ✓
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    const punishment = PUNISHMENTS[Math.floor(Math.random() * PUNISHMENTS.length)];
+                    document.getElementById('actually-missed-count').textContent = modal.actuallyMissed;
+                    document.getElementById('punishment-activity').textContent = punishment;
+                    punishmentSection.style.display = 'block';
+                    completionSection.style.display = 'none';
+                }
+
+                this.stats = this.calculateStats();
+                this.render();
+            }
+
+            completePunishmentFlow(date) {
+                Utils.safeStorage.set('lastPunishmentDate', date);
+                this.currentPunishmentModal = null;
+            }
+
+            switchTab(tab) {
+                this.currentTab = tab;
+                this.render();
+            }
+
+            getBestPerformingHabit() {
+                if (this.habits.length === 0) return null;
+                
+                const monthDates = this.getMonthDates();
+                return this.habits.reduce((best, habit) => {
+                    const currentCompleted = monthDates.filter(date => habit.completions[date]).length;
+                    const bestCompleted = monthDates.filter(date => best.completions[date]).length;
+                    return currentCompleted > bestCompleted ? habit : best;
+                });
+            }
+
+            getWorstPerformingHabit() {
+                if (this.habits.length === 0) return null;
+                
+                const monthDates = this.getMonthDates();
+                return this.habits.reduce((worst, habit) => {
+                    const currentCompleted = monthDates.filter(date => habit.completions[date]).length;
+                    const worstCompleted = monthDates.filter(date => worst.completions[date]).length;
+                    return currentCompleted < worstCompleted ? habit : worst;
+                });
+            }
+
+            render() {
+                const app = document.getElementById('app');
+                const weekDates = this.getWeekDates();
+                const todayStr = Utils.getDateString();
+
+                app.innerHTML = `
+                    <div class="app">
+                        <div class="header">
+                            <h1 class="title">Aadat</h1>
+                            <p class="subtitle">Small steps, big change. Build your habits, shape your future.</p>
+                        </div>
+
+                        <div class="nav-tabs">
+                            <button class="nav-tab ${this.currentTab === 'habits' ? 'active' : ''}" onclick="app.switchTab('habits')">
+                                📝 My Habits
+                            </button>
+                            <button class="nav-tab ${this.currentTab === 'weekly' ? 'active' : ''}" onclick="app.switchTab('weekly')">
+                                📊 Weekly Dashboard
+                            </button>
+                            <button class="nav-tab ${this.currentTab === 'monthly' ? 'active' : ''}" onclick="app.switchTab('monthly')">
+                                📈 Monthly Dashboard
+                            </button>
+                        </div>
+
+                        <div class="tab-content ${this.currentTab === 'habits' ? 'active' : ''}">
+                            <div class="add-habit">
+                                <div class="input-group">
+                                    <input type="text" 
+                                           class="input" 
+                                           id="habitName" 
+                                           placeholder="Enter habit name (e.g., Drink 8 glasses of water, Exercise for 30 minutes)..." 
+                                           maxlength="100" />
+                                    <button class="btn" onclick="app.addHabit(document.getElementById('habitName').value); document.getElementById('habitName').value = '';">
+                                        Add Habit
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="habits-grid">
+                                ${this.habits.length === 0 ? `
+                                    <div class="empty-state">
+                                        <div class="empty-icon">🎯</div>
+                                        <h3>No habits yet</h3>
+                                        <p>Add your first habit to start building better routines!</p>
+                                    </div>
+                                ` : this.habits.map(habit => {
+                                    const streak = this.getStreak(habit);
+                                    
+                                    return `
+                                        <div class="habit-card">
+                                            <div class="habit-header">
+                                                <span class="habit-name">${habit.name}</span>
+                                                <span class="habit-streak">${streak} day streak 🔥</span>
+                                            </div>
+                                            
+                                            <div class="habit-checkboxes">
+                                                ${weekDates.map(date => `
+                                                    <div class="day-checkbox">
+                                                        <div class="day-label ${this.isToday(date) ? 'today' : ''}">${this.getDayName(date)}</div>
+                                                        <div class="checkbox-container">
+                                                            <input type="checkbox" 
+                                                                   class="checkbox ${this.isToday(date) ? 'today' : ''}" 
+                                                                   ${habit.completions[date] ? 'checked' : ''}
+                                                                   onchange="app.toggleHabit(${habit.id}, '${date}')" />
+                                                        </div>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+
+                                            <div class="habit-actions">
+                                                <button class="btn btn-small btn-danger" onclick="app.deleteHabit(${habit.id})">
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+
+                        <div class="tab-content ${this.currentTab === 'weekly' ? 'active' : ''}">
+                            <div class="dashboard-grid">
+                                <div class="dashboard-card">
+                                    <div class="dashboard-title">📊 Weekly Overview</div>
+                                    <div class="progress-ring">
+                                        <svg>
+                                            <defs>
+                                                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                    <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+                                                    <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+                                                </linearGradient>
+                                            </defs>
+                                            <circle class="bg" cx="60" cy="60" r="50"></circle>
+                                            <circle class="progress" cx="60" cy="60" r="50" 
+                                                    stroke-dasharray="314.16" 
+                                                    stroke-dashoffset="${314.16 - (314.16 * this.stats.weekly.completionRate / 100)}"></circle>
+                                        </svg>
+                                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                            <div style="font-size: 1.5rem; font-weight: 800; color: #3b82f6;">${this.stats.weekly.completionRate}%</div>
+                                            <div style="font-size: 0.75rem; color: #94a3b8;">Complete</div>
+                                        </div>
+                                    </div>
+                                    <div style="text-align: center; color: #94a3b8;">
+                                        ${this.stats.weekly.completed} / ${this.stats.weekly.possible} habits completed this week
+                                    </div>
+                                </div>
+
+                                <div class="dashboard-card">
+                                    <div class="dashboard-title">🔥 Active Streaks</div>
+                                    <div class="stat-value">${this.stats.weekly.habitsWithStreaks}</div>
+                                    <div class="stat-label">out of ${this.habits.length} habits have active streaks</div>
+                                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(148, 163, 184, 0.1);">
+                                        <div style="color: #94a3b8; font-size: 0.875rem;">Average streak length</div>
+                                        <div style="font-size: 1.5rem; font-weight: 600; color: #10b981;">
+                                            ${this.stats.weekly.averageStreak} days
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="dashboard-card">
+                                    <div class="dashboard-title">📅 This Week's Progress</div>
+                                    <div class="habit-list">
+                                        ${this.habits.map(habit => {
+                                            const weekCompleted = weekDates.filter(date => habit.completions[date]).length;
+                                            const weekPercentage = Math.round((weekCompleted / 7) * 100);
+                                            return `
+                                                <li>
+                                                    <span>${habit.name}</span>
+                                                    <span style="display: flex; align-items: center; gap: 0.5rem;">
+                                                        <span style="color: ${weekPercentage >= 70 ? '#10b981' : weekPercentage >= 40 ? '#f59e0b' : '#ef4444'};">
+                                                            ${weekCompleted}/7
+                                                        </span>
+                                                        <span style="color: #94a3b8; font-size: 0.875rem;">(${weekPercentage}%)</span>
+                                                    </span>
+                                                </li>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-content ${this.currentTab === 'monthly' ? 'active' : ''}">
+                            <div class="dashboard-grid">
+                                <div class="dashboard-card">
+                                    <div class="dashboard-title">📈 Monthly Progress</div>
+                                    <div class="progress-ring">
+                                        <svg>
+                                            <circle class="bg" cx="60" cy="60" r="50"></circle>
+                                            <circle class="progress" cx="60" cy="60" r="50" 
+                                                    stroke-dasharray="314.16" 
+                                                    stroke-dashoffset="${314.16 - (314.16 * this.stats.monthly.completionRate / 100)}"></circle>
+                                        </svg>
+                                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                            <div style="font-size: 1.5rem; font-weight: 800; color: #3b82f6;">${this.stats.monthly.completionRate}%</div>
+                                            <div style="font-size: 0.75rem; color: #94a3b8;">Complete</div>
+                                        </div>
+                                    </div>
+                                    <div style="text-align: center; color: #94a3b8;">
+                                        ${this.stats.monthly.completed} / ${this.stats.monthly.possible} habits completed this month
+                                    </div>
+                                </div>
+
+                                <div class="dashboard-card">
+                                    <div class="dashboard-title">🎯 Monthly Goals</div>
+                                    <div class="stat-value">${this.stats.monthly.daysInMonth}</div>
+                                    <div class="stat-label">days in this month</div>
+                                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(148, 163, 184, 0.1);">
+                                        <div style="color: #94a3b8; font-size: 0.875rem;">Daily average completion</div>
+                                        <div style="font-size: 1.5rem; font-weight: 600; color: #8b5cf6;">
+                                            ${this.habits.length > 0 ? Math.round((this.stats.monthly.completed / this.stats.monthly.daysInMonth) * 10) / 10 : 0} / ${this.habits.length}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="dashboard-card">
+                                    <div class="dashboard-title">🏆 Monthly Champions</div>
+                                    <div class="habit-list">
+                                        ${this.habits.map(habit => {
+                                            const monthDates = this.getMonthDates();
+                                            const monthCompleted = monthDates.filter(date => habit.completions[date]).length;
+                                            const monthPercentage = Math.round((monthCompleted / monthDates.length) * 100);
+                                            return `
+                                                <li>
+                                                    <span>${habit.name}</span>
+                                                    <span style="display: flex; align-items: center; gap: 0.5rem;">
+                                                        <span style="color: ${monthPercentage >= 80 ? '#10b981' : monthPercentage >= 60 ? '#f59e0b' : '#ef4444'};">
+                                                            ${monthCompleted}/${monthDates.length}
+                                                        </span>
+                                                        <span style="color: #94a3b8; font-size: 0.875rem;">(${monthPercentage}%)</span>
+                                                        ${monthPercentage >= 80 ? '<span style="color: #fbbf24;">🏆</span>' : monthPercentage >= 60 ? '<span style="color: #94a3b8;">🥈</span>' : ''}
+                                                    </span>
+                                                </li>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+
+                                <div class="dashboard-card">
+                                    <div class="dashboard-title">💡 Monthly Insights</div>
+                                    <div style="space-y: 1rem;">
+                                        <div style="margin-bottom: 1rem;">
+                                            <div style="color: #94a3b8; font-size: 0.875rem;">Best performing habit</div>
+                                            <div style="font-weight: 600; color: #10b981;">
+                                                ${this.getBestPerformingHabit()?.name || 'No habits yet'}
+                                            </div>
+                                        </div>
+                                        <div style="margin-bottom: 1rem;">
+                                            <div style="color: #94a3b8; font-size: 0.875rem;">Needs improvement</div>
+                                            <div style="font-weight: 600; color: #ef4444;">
+                                                ${this.getWorstPerformingHabit()?.name || 'No habits yet'}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div style="color: #94a3b8; font-size: 0.875rem;">Consistency score</div>
+                                            <div style="font-weight: 600; color: #8b5cf6;">
+                                                ${this.stats.monthly.completionRate >= 80 ? 'Excellent! 🌟' : 
+                                                  this.stats.monthly.completionRate >= 60 ? 'Good! 👍' : 
+                                                  this.stats.monthly.completionRate >= 40 ? 'Fair 📈' : 'Needs work 💪'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Add keyboard support for adding habits
+                const habitInput = document.getElementById('habitName');
+                if (habitInput) {
+                    habitInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            this.addHabit(habitInput.value);
+                            habitInput.value = '';
+                        }
+                    });
+                }
+            }
+        }
+
+        // PWA Install functionality
+        let deferredPrompt;
+        const installButton = document.getElementById('installPrompt');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installButton.classList.add('show');
+        });
+
+        installButton.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                deferredPrompt = null;
+                installButton.classList.remove('show');
+            }
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed');
+            installButton.classList.remove('show');
+            Utils.showToast('App installed successfully! 🎉', 'success');
+        });
+
+        // Initialize the app
+        const app = new HabitTracker();
+
+        // Handle app lifecycle events
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                // App became visible, check for missed habits
+                app.checkForMissedHabits();
+                // Recalculate stats in case the day changed
+                app.stats = app.calculateStats();
+                app.render();
+            }
+        });
+
+        // Auto-update display every minute to handle day transitions
+        setInterval(() => {
+            const now = new Date();
+            if (now.getHours() === 0 && now.getMinutes() === 0) {
+                // It's midnight, re-render to update day highlighting
+                app.stats = app.calculateStats();
+                app.render();
+                Utils.showToast('New day started! 🌅', 'success');
+            }
+        }, 60000);
+
+        // Handle online/offline status
+        window.addEventListener('online', () => {
+            Utils.showToast('Back online! 🌐', 'success');
+        });
+
+        window.addEventListener('offline', () => {
+            Utils.showToast('You\'re offline - changes will save locally 📱', 'error');
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + 1-3 for tab switching
+            if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        app.switchTab('habits');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        app.switchTab('weekly');
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        app.switchTab('monthly');
+                        break;
+                    case 'k':
+                        // Ctrl/Cmd + K to focus on habit input
+                        e.preventDefault();
+                        const habitInput = document.getElementById('habitName');
+                        if (habitInput) {
+                            app.switchTab('habits');
+                            setTimeout(() => habitInput.focus(), 100);
+                        }
+                        break;
+                }
+            }
+        });
+
+        // Add some fun confetti effect for streaks
+        function createConfetti() {
+            const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444'];
+            const confettiCount = 50;
+            
+            for (let i = 0; i < confettiCount; i++) {
+                const confetti = document.createElement('div');
+                confetti.style.position = 'fixed';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.width = Math.random() * 10 + 5 + 'px';
+                confetti.style.height = confetti.style.width;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                confetti.style.pointerEvents = 'none';
+                confetti.style.zIndex = '9999';
+                confetti.style.opacity = '0.8';
+                
+                document.body.appendChild(confetti);
+                
+                const fallAnimation = confetti.animate([
+                    { 
+                        transform: 'translateY(-10px) rotate(0deg)',
+                        opacity: 0.8
+                    },
+                    { 
+                        transform: `translateY(calc(100vh + 10px)) rotate(${Math.random() * 360}deg)`,
+                        opacity: 0
+                    }
+                ], {
+                    duration: Math.random() * 2000 + 3000,
+                    easing: 'ease-out'
+                });
+                
+                fallAnimation.onfinish = () => {
+                    if (document.body.contains(confetti)) {
+                        document.body.removeChild(confetti);
+                    }
+                };
+            }
+        }
+
+        // Trigger confetti for milestone streaks
+        const originalToggleHabit = app.toggleHabit.bind(app);
+        app.toggleHabit = function(habitId, date) {
+            const habit = this.habits.find(h => h.id === habitId);
+            const wasCompleted = habit?.completions[date];
+            
+            originalToggleHabit(habitId, date);
+            
+            // Check if this completion created a milestone streak
+            if (!wasCompleted && habit) {
+                const newStreak = this.getStreak(habit);
+                if (newStreak > 0 && (newStreak % 7 === 0 || newStreak === 30 || newStreak === 100)) {
+                    setTimeout(() => {
+                        createConfetti();
+                        Utils.showToast(`🎉 ${newStreak} day streak! Amazing work!`, 'success', 5000);
+                    }, 500);
+                }
+            }
+        };
+
+        // Add export/import functionality
+        app.exportData = function() {
+            const data = {
+                habits: this.habits,
+                exportDate: new Date().toISOString(),
+                version: '1.1'
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `habit-tracker-backup-${Utils.getDateString()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            Utils.showToast('Data exported successfully! 📄', 'success');
+        };
+
+        app.importData = function(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.habits && Array.isArray(data.habits)) {
+                        if (confirm('This will replace all your current habits. Are you sure?')) {
+                            this.habits = data.habits.map(habit => ({
+                                ...habit,
+                                completions: habit.completions || {}
+                            }));
+                            this.saveHabits();
+                            this.stats = this.calculateStats();
+                            this.render();
+                            Utils.showToast('Data imported successfully! 🎉', 'success');
+                        }
+                    } else {
+                        Utils.showToast('Invalid backup file format', 'error');
+                    }
+                } catch (error) {
+                    Utils.showToast('Error reading backup file', 'error');
+                }
+            };
+            reader.readAsText(file);
+        };
+
+        // Add data management buttons to the UI (you can uncomment this if you want export/import buttons)
+        /*
+        const addDataManagementButtons = () => {
+            const header = document.querySelector('.header');
+            if (header && !document.querySelector('.data-management')) {
+                const div = document.createElement('div');
+                div.className = 'data-management';
+                div.style.marginTop = '1rem';
+                div.innerHTML = `
+                    <button class="btn btn-small" onclick="app.exportData()" style="margin-right: 0.5rem;">
+                        📄 Export Data
+                    </button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="if(this.files[0]) app.importData(this.files[0])">
+                    <button class="btn btn-small" onclick="document.getElementById('importFile').click()">
+                        📥 Import Data
+                    </button>
+                `;
+                header.appendChild(div);
+            }
+        };
+        
+        // Add the buttons after initial render
+        setTimeout(addDataManagementButtons, 100);
+        */
+
+        console.log('🎯 Habit Tracker PWA loaded successfully!');
+        console.log('💡 Keyboard shortcuts:');
+        console.log('   Ctrl/Cmd + 1: Habits tab');
+        console.log('   Ctrl/Cmd + 2: Weekly dashboard');
+        console.log('   Ctrl/Cmd + 3: Monthly dashboard');
+        console.log('   Ctrl/Cmd + K: Focus habit input');
+    </script>
+</body>
+</html>
